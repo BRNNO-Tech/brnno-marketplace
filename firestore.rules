@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+
+    // ===== MARKETPLACE APP STRUCTURE =====
+    
+    // Users collection (customers in marketplace app)
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId;
+
+      match /paymentMethods/{paymentId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow update: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /vehicles/{vehicleId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow update: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // ===== PROVIDER APP STRUCTURE =====
+    
+    // Customers collection (if provider app uses this)
+    match /customers/{customerId} {
+      allow read, write: if isSignedIn() && request.auth.uid == customerId;
+      
+      match /addresses/{addressId} {
+        allow read, write: if isSignedIn() && request.auth.uid == customerId;
+      }
+      
+      match /vehicles/{vehicleId} {
+        allow read, write: if isSignedIn() && request.auth.uid == customerId;
+      }
+    }
+
+    // ===== SHARED PROVIDER STRUCTURE =====
+    
+    match /providers/{providerId} {
+      // Public read for marketplace browsing (customer-only app)
+      allow read: if true;
+      // Allow public creation for testing (provider app handles auth)
+      allow create: if true; // Allow public creation for testing/demo providers
+      allow update, delete: if isSignedIn() && request.auth.uid == providerId;
+
+      // Marketplace app: Jobs subcollection
+      match /jobs/{jobId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && request.auth.uid == providerId;
+      }
+
+      // Provider app: Availability subcollection
+      match /availability/{availabilityId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && request.auth.uid == providerId;
+      }
+
+      // Provider app: Blocks subcollection
+      match /blocks/{blockId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && request.auth.uid == providerId;
+      }
+
+      // Provider app: Google Calendar integration
+      match /integrations/googleCalendar/{integrationId} {
+        allow read: if isSignedIn() && request.auth.uid == providerId;
+        allow write: if isSignedIn() && request.auth.uid == providerId;
+      }
+
+      // Provider app: Team members
+      match /team/{memberId} {
+        allow read: if isSignedIn() && request.auth.uid == providerId;
+        allow write: if isSignedIn() && request.auth.uid == providerId;
+      }
+
+      // Provider app: Schedule subcollection
+      match /availability/schedule/{scheduleId} {
+        allow read: if isSignedIn() && request.auth.uid == providerId;
+        allow write: if isSignedIn() && request.auth.uid == providerId;
+      }
+    }
+
+    // ===== SHARED BOOKINGS STRUCTURE =====
+    
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        (resource.data.customerId != null && request.auth.uid == resource.data.customerId) ||
+        (resource.data.providerId != null && request.auth.uid == resource.data.providerId)
+      );
+      allow create: if isSignedIn() && 
+        request.resource.data.customerId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        (resource.data.customerId != null && request.auth.uid == resource.data.customerId) ||
+        (resource.data.providerId != null && request.auth.uid == resource.data.providerId)
+      );
+      allow delete: if false;
+    }
+  }
+}
+
