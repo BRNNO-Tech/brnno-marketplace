@@ -4,12 +4,12 @@ import { getAuth, signInAnonymously } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCz6pgk8hlt5hyP-QERlw-TLXtft-B-bH8",
-  authDomain: "brnno-1b216.firebaseapp.com",
-  projectId: "brnno-1b216",
-  storageBucket: "brnno-1b216.firebasestorage.app",
-  messagingSenderId: "378878794367",
-  appId: "1:378878794367:web:a540dcf46e9db931d57d4a",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
 
 const app = initializeApp(firebaseConfig);
