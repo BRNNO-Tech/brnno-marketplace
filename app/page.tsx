@@ -39,18 +39,18 @@ export default function Home() {
       <div className="flex items-center justify-center p-6 min-h-screen">
         <div className="max-w-4xl text-center">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
-            Brnno Services
+            Brnno Marketplace
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Pro Auto Detailing, Uber-Fast Booking. Vetted Pros. Fair Prices.
+            Pro Auto Detailing, Uber-Fast Booking. Fair Prices, Secure Payments
           </p>
           <Link
             href="/quiz"
             className="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-8 rounded-full text-lg transition transform hover:scale-105"
           >
-            Find Your Perfect Detailer
+            Book Your Perfect Detail
           </Link>
-          <p className="mt-6 text-sm opacity-70">Join 500+ happy drivers • Like Thumbtack for your ride</p>
+          <p className="mt-6 text-sm opacity-70">Mobile detailing made easy</p>
         </div>
       </div>
 

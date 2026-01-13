@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import DetailerCard from "@/components/DetailerCard";
 
-export default function QuizResults() {
+function QuizResultsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [providers, setProviders] = useState<any[]>([]);
@@ -14,17 +14,21 @@ export default function QuizResults() {
   const [filters, setFilters] = useState({ service: "", rating: 0, price: 1000 });
   const [testingConnection, setTestingConnection] = useState(false);
 
-  // Test function to verify Firestore connection and create a test provider
+  // New params logic
+  const address = searchParams.get('address');
+  const year = searchParams.get('year');
+  const make = searchParams.get('make');
+  const model = searchParams.get('model');
+
+  // Test function to verify Firestore connection
   const testFirestoreConnection = async () => {
     setTestingConnection(true);
     try {
       const { collection, getDocs, doc, setDoc } = await import('firebase/firestore');
-      
       const providersRef = collection(db, "providers");
       const snapshot = await getDocs(providersRef);
       
       if (snapshot.size === 0) {
-        // Create a test provider
         const testProvider = {
           businessName: "Test Auto Detailing",
           bio: "This is a test provider created to verify Firestore connection",
@@ -42,13 +46,8 @@ export default function QuizResults() {
         };
         
         const testProviderRef = doc(db, "providers", "test-provider-" + Date.now());
-        try {
-          await setDoc(testProviderRef, testProvider);
-          alert('Test provider created! Refresh the page to see it.');
-        } catch (createError: any) {
-          console.error('Could not create provider:', createError.message);
-          alert('Provider creation requires authentication. Check Firebase Console to verify if it was created.');
-        }
+        await setDoc(testProviderRef, testProvider);
+        alert('Test provider created! Refresh the page to see it.');
       } else {
         alert(`Found ${snapshot.size} provider(s)!`);
       }
@@ -60,20 +59,10 @@ export default function QuizResults() {
     }
   };
 
-  const priority = searchParams.get('priority');
-  const goal = searchParams.get('goal');
-  const budget = searchParams.get('budget');
-
   useEffect(() => {
-    if (!priority || !goal || !budget) {
-      router.push('/quiz');
-      return;
-    }
-
-    // Start with ALL providers - don't filter by service initially
+    // Logic updated: No longer redirects if priority/goal/budget are missing
     let q = query(collection(db, "providers"));
 
-    // Only filter by rating if specified
     if (filters.rating > 0) {
       q = query(q, where("rating", ">=", filters.rating));
     }
@@ -83,12 +72,10 @@ export default function QuizResults() {
       (snap) => {
         let list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-        // Filter by service if specified (check both servicesOffered array and structured services)
+        // Filter by service
         if (filters.service) {
           list = list.filter((p: any) => {
-            // Check legacy servicesOffered array
             const servicesOffered = Array.isArray(p.servicesOffered) ? p.servicesOffered : [];
-            // Check new structured services
             const structuredServices = Array.isArray(p.services) ? p.services : [];
             const serviceNames = structuredServices.map((s: any) => s.name || s);
             
@@ -98,45 +85,21 @@ export default function QuizResults() {
           });
         }
 
-        // Filter by price based on budget
+        // Filter by price
         if (filters.price < 1000) {
           list = list.filter((p: any) => {
-            // Check both legacy and new pricing structures
-            // Get the minimum price from all available services
             let minPrice = 9999;
-            
-            // Check legacy pricing
             if (p.priceBasic) minPrice = Math.min(minPrice, p.priceBasic);
             if (p.priceFull) minPrice = Math.min(minPrice, p.priceFull);
             if (p.price) minPrice = Math.min(minPrice, p.price);
             
-            // Check structured services pricing
             if (Array.isArray(p.services)) {
               p.services.forEach((s: any) => {
                 const servicePrice = s.price || s.avgPriceRange?.min;
                 if (servicePrice) minPrice = Math.min(minPrice, servicePrice);
               });
             }
-            
-            // Include provider if they have ANY service within budget
             return minPrice <= filters.price;
-          });
-        }
-
-        // Sort based on priority
-        if (priority === "Highest rated") {
-          list.sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
-        } else if (priority === "Best price") {
-          list.sort((a: any, b: any) => {
-            const priceA = a.priceFull || 
-                          (a.services?.find((s: any) => s.name === "Full Detail")?.price) ||
-                          (a.price) ||
-                          9999;
-            const priceB = b.priceFull || 
-                          (b.services?.find((s: any) => s.name === "Full Detail")?.price) ||
-                          (b.price) ||
-                          9999;
-            return priceA - priceB;
           });
         }
 
@@ -148,29 +111,14 @@ export default function QuizResults() {
       });
 
     return unsub;
-  }, [priority, goal, budget, filters, router]);
-
-  // Set initial filters based on budget - but don't force service filter
-  useEffect(() => {
-    if (budget) {
-      if (budget.includes("Under $100")) {
-        setFilters({ service: "", rating: 0, price: 100 }); // Don't force service
-      } else if (budget.includes("$100-$200")) {
-        setFilters({ service: "", rating: 0, price: 200 });
-      } else if (budget.includes("$200-$400")) {
-        setFilters({ service: "", rating: 0, price: 400 });
-      } else {
-        setFilters({ service: "", rating: 0, price: 1000 });
-      }
-    }
-  }, [budget]);
+  }, [filters]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900 flex items-center justify-center text-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Finding your perfect detailers...</p>
+          <p>Finding detailers for your {make}...</p>
         </div>
       </div>
     );
@@ -179,14 +127,17 @@ export default function QuizResults() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900">
       <div className="bg-gradient-to-br from-blue-900 to-black text-white p-8">
-        <h1 className="text-4xl font-bold mb-2">We Found {providers.length} Detailer{providers.length !== 1 ? 's' : ''} For You</h1>
-        <p className="mt-2 opacity-90">
-          Based on your preferences: {priority} • {goal} • {budget}
-        </p>
+        <h1 className="text-4xl font-bold mb-2">We Found {providers.length} Detailer{providers.length !== 1 ? 's' : ''}</h1>
+        <div className="flex flex-wrap gap-3 mt-2 opacity-90 items-center">
+          <span className="bg-white/10 px-3 py-1 rounded-full text-sm">📍 {address || "Current Location"}</span>
+          {make && (
+            <span className="bg-white/10 px-3 py-1 rounded-full text-sm">🚗 {year} {make} {model}</span>
+          )}
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        {/* Filters */}
+        {/* Filters UI stays the same */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-6 mb-6 border border-white/20">
           <div className="grid md:grid-cols-3 gap-4 items-center">
             <select
@@ -223,39 +174,21 @@ export default function QuizResults() {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Results logic stays the same */}
         {providers.length === 0 ? (
           <div className="text-center py-12 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-            <p className="text-white mb-4 text-lg">No detailers found matching your criteria.</p>
-            <div className="flex flex-col gap-3 items-center">
-              <button
-                onClick={testFirestoreConnection}
-                disabled={testingConnection}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {testingConnection ? 'Testing...' : '🧪 Test Firestore Connection'}
-              </button>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setFilters({ service: "", rating: 0, price: 1000 })}
-                  className="text-blue-300 hover:text-blue-200 font-medium"
-                >
-                  Clear Filters
-                </button>
-                <button
-                  onClick={() => router.push('/quiz')}
-                  className="text-blue-300 hover:text-blue-200 font-medium"
-                >
-                  Try different preferences →
-                </button>
-              </div>
-            </div>
+            <p className="text-white mb-4 text-lg">No detailers found in this area yet.</p>
+            <button
+              onClick={testFirestoreConnection}
+              disabled={testingConnection}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              {testingConnection ? 'Testing...' : '🧪 Test Firestore Connection'}
+            </button>
           </div>
         ) : (
           <>
-            <p className="text-white/80 mb-4">
-              {providers.length} detailer{providers.length !== 1 ? 's' : ''} available
-            </p>
+            <p className="text-white/80 mb-4">{providers.length} available</p>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {providers.map((p) => (
                 <DetailerCard key={p.id} provider={p} />
@@ -268,3 +201,11 @@ export default function QuizResults() {
   );
 }
 
+// Full page export with Suspense for Next.js searchParams
+export default function QuizResults() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <QuizResultsContent />
+    </Suspense>
+  );
+}
