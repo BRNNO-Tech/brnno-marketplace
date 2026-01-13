@@ -14,7 +14,7 @@ function QuizResultsContent() {
   const [filters, setFilters] = useState({ service: "", rating: 0, price: 1000 });
   const [testingConnection, setTestingConnection] = useState(false);
 
-  // New params logic
+  // params logic
   const address = searchParams.get('address');
   const year = searchParams.get('year');
   const make = searchParams.get('make');
@@ -60,7 +60,6 @@ function QuizResultsContent() {
   };
 
   useEffect(() => {
-    // Logic updated: No longer redirects if priority/goal/budget are missing
     let q = query(collection(db, "providers"));
 
     if (filters.rating > 0) {
@@ -137,7 +136,7 @@ function QuizResultsContent() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        {/* Filters UI stays the same */}
+        {/* Filters UI */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-6 mb-6 border border-white/20">
           <div className="grid md:grid-cols-3 gap-4 items-center">
             <select
@@ -174,7 +173,7 @@ function QuizResultsContent() {
           </div>
         </div>
 
-        {/* Results logic stays the same */}
+        {/* Results logic */}
         {providers.length === 0 ? (
           <div className="text-center py-12 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
             <p className="text-white mb-4 text-lg">No detailers found in this area yet.</p>
