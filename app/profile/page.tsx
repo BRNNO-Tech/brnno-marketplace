@@ -46,7 +46,7 @@ export default function Marketplace() {
           businessName: "Test Auto Detailing",
           bio: "This is a test provider created to verify Firestore connection",
           phone: "+1 (555) 000-0000",
-          address: "123 Test Street, Test City, CA 94102",
+          address: "123 Test Street, Test City, CA 12345",
           lat: 37.7749,
           lng: -122.4194,
           servicesOffered: ["Basic Wash", "Full Detail"],
@@ -361,7 +361,7 @@ export default function Marketplace() {
                 disabled={testingConnection}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {testingConnection ? 'Testing...' : '🧪 Test Firestore Connection'}
+                {testingConnection ? 'Testing...' : 'Test Firestore Connection'}
               </button>
             </div>
             <p className="text-xs text-gray-400 mt-2">
