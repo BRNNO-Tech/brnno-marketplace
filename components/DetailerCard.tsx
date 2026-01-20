@@ -10,7 +10,7 @@ interface DetailerCardProps {
     businessName?: string;
     rating?: number;
     reviewCount?: number;
-    servicesOffered?: string[];
+    servicesOffered?: string;
     price?: number;
     verified?: boolean;
     address?: string;

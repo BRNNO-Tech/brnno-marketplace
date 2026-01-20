@@ -32,7 +32,7 @@ export default function Login() {
               goal: answers.goal || '',
               budget: answers.budget || '',
             });
-            router.push(`/quiz/results?${params.toString()}`);
+            router.push(`/profile?${params.toString()}`);
             return;
           } catch (e) {
             // If parsing fails, just go to profile
@@ -66,7 +66,7 @@ export default function Login() {
               goal: answers.goal || '',
               budget: answers.budget || '',
             });
-            router.push(`/quiz/results?${params.toString()}`);
+            router.push(`/profile?${params.toString()}`);
             return;
           } catch (e) {
             // If parsing fails, just go to profile
