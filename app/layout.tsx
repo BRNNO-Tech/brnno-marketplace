@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+'use client'; // Layouts can be client components if needed for hooks
+
+import { usePathname } from "next/navigation";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -7,22 +9,21 @@ import NavBar from "@/components/NavBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Brnno Services",
-  description: "Pro auto detailing marketplace",
-};
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  
+  const isLandingPage = pathname === "/";
+
   return (
     <html lang="en">
       <body className={inter.className}>
         <ErrorBoundary>
           <AuthProvider>
-            <NavBar />
+            {!isLandingPage && <NavBar />}
             {children}
           </AuthProvider>
         </ErrorBoundary>
@@ -30,4 +31,3 @@ export default function RootLayout({
     </html>
   );
 }
-

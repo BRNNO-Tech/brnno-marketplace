@@ -14,6 +14,10 @@ export default function ChooseRole() {
     if (providerId) params.set('providerId', providerId);
     router.push(`/auth/signup/customer${params.toString() ? `?${params.toString()}` : ''}`);
   };
+
+  const navigateToProviderSignup = () => {
+    router.push('/auth/signup/provider');
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900 flex items-center justify-center p-6">
@@ -27,10 +31,13 @@ export default function ChooseRole() {
           >
             Sign Up as Customer
           </button>
-        </div>
-        <p className="mt-4 text-xs text-gray-500">
-          Providers: Please sign up through the provider app
-        </p>
+          <button
+            onClick={navigateToProviderSignup}
+            className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition"
+          >
+            Sign Up as Detailer (Provider)
+          </button>
+        </div>      
         <p className="mt-6 text-sm text-gray-600">
           Already have an account? <a href="/auth/login" className="text-blue-600 hover:underline">Log in</a>
         </p>
